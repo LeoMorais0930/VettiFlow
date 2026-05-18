@@ -4,7 +4,6 @@ using VettiFlow.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// JsonStore — singleton que lê/grava vettiflow_data.json localmente
 builder.Services.AddSingleton<JsonStore>();
 
 builder.Services.AddSignalR();
@@ -17,7 +16,7 @@ builder.Services.ConfigureHttpJsonOptions(opt =>
 
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(p =>
-        p.SetIsOriginAllowed(_ => true) // Permite qualquer origem (ideal para dev local/web)
+        p.SetIsOriginAllowed(_ => true) 
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials()));
@@ -28,10 +27,11 @@ var app = builder.Build();
 app.Services.GetRequiredService<JsonStore>().Load();
 
 app.UseSwagger();
-app.UseSwaggerUI(c => c.RoutePrefix = string.Empty); // Swagger na raiz "/"
-
+app.UseSwaggerUI(c => c.RoutePrefix = "swagger");
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseCors();
 app.MapHub<ProductionHub>("/hubs/production");
 ApiEndpoints.Map(app);
 
-app.Run("http://0.0.0.0:5000"); // Força escutar em todos os IPs da rede
+app.Run("http://0.0.0.0:5000"); 
