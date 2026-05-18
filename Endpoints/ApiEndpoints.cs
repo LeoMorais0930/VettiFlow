@@ -75,6 +75,28 @@ public static class ApiEndpoints
             return Results.Created($"/api/blueprints/{bp.Id}", bp);
         });
 
+        api.MapDelete("/blueprints/{id:int}", async (int id, JsonStore store, IHubContext<ProductionHub> hub) =>
+        {
+            var bp = store.Blueprints.FirstOrDefault(b => b.Id == id);
+            if (bp == null) return Results.NotFound();
+
+            // Remove any orders that reference this blueprint
+            var ordersToRemove = store.Orders.Where(o => o.BlueprintId == id).ToList();
+            foreach (var o in ordersToRemove)
+            {
+                // remove related progress entries
+                store.Progress.RemoveAll(p => p.OrderId == o.Id);
+                store.Orders.Remove(o);
+            }
+
+            store.Blueprints.Remove(bp);
+            store.Save();
+            AppendAuditLog($"PRODUTO EXCLUÍDO: {bp.Code}");
+            if (ordersToRemove.Count > 0) AppendAuditLog($"REMOVIDOS {ordersToRemove.Count} LOTES RELACIONADOS AO PRODUTO {bp.Code}");
+            await NotifyClients(hub);
+            return Results.NoContent();
+        });
+
         api.MapGet("/orders", (JsonStore store) =>
         {
             var result = store.Orders.OrderByDescending(o => o.CreatedAt)
