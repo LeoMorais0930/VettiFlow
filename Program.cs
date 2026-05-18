@@ -34,4 +34,35 @@ app.UseCors();
 app.MapHub<ProductionHub>("/hubs/production");
 ApiEndpoints.Map(app);
 
-app.Run("http://0.0.0.0:5000"); 
+// Resolve a usable local IPv4 address so mobile clients can connect using the machine IP
+string GetLocalIPv4()
+{
+    try
+    {
+        foreach (var ni in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (ni.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up)
+                continue;
+
+            var ipProps = ni.GetIPProperties();
+            foreach (var ua in ipProps.UnicastAddresses)
+            {
+                var ip = ua.Address;
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && !System.Net.IPAddress.IsLoopback(ip))
+                {
+                    var bytes = ip.GetAddressBytes();
+                    // skip APIPA addresses
+                    if (bytes[0] == 169 && bytes[1] == 254) continue;
+                    return ip.ToString();
+                }
+            }
+        }
+    }
+    catch { }
+    return "127.0.0.1";
+}
+
+var localIp = GetLocalIPv4();
+var url = $"http://{localIp}:5000";
+Console.WriteLine($"VettiFlow API listening on: {url}");
+app.Run(url);

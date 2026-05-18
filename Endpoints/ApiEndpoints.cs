@@ -12,7 +12,28 @@ public static class ApiEndpoints
     {
         var api = app.MapGroup("/api");
 
-        DateTime GetBrasiliaTime() => DateTime.UtcNow.AddHours(-3);
+        // Resolve Brasilia / São_Paulo timezone (Windows / IANA fallbacks)
+        TimeZoneInfo? _brasilTz = null;
+        try { _brasilTz = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"); } catch { }
+        if (_brasilTz == null)
+        {
+            try { _brasilTz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"); } catch { }
+        }
+
+        DateTime GetBrasiliaTime() => _brasilTz == null
+            ? DateTime.UtcNow
+            : TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _brasilTz);
+
+        DateTime? ToBrasilia(DateTime? dt)
+        {
+            if (!dt.HasValue) return null;
+            try
+            {
+                var utc = DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
+                return _brasilTz == null ? utc : TimeZoneInfo.ConvertTimeFromUtc(utc, _brasilTz);
+            }
+            catch { return dt; }
+        }
 
         void AppendAuditLog(string message)
         {
@@ -61,7 +82,9 @@ public static class ApiEndpoints
                     var bp = store.Blueprints.FirstOrDefault(b => b.Id == o.BlueprintId);
                     return new {
                         o.Id, o.Label, o.TotalQty, o.IsHighPriority, o.CurrentStageIndex, o.IsCompleted,
-                        o.ComponentCodes, o.KitStatuses, o.CreatedAt, o.CompletedAt,
+                        o.ComponentCodes, o.KitStatuses,
+                        CreatedAt = ToBrasilia(o.CreatedAt) ?? o.CreatedAt,
+                        CompletedAt = ToBrasilia(o.CompletedAt) ?? o.CompletedAt,
                         Blueprint = bp == null ? null : new {
                             bp.Id, bp.Code, bp.Name, Stages = bp.Stages.OrderBy(s => s.Order)
                         }
@@ -196,7 +219,16 @@ public static class ApiEndpoints
 
         api.MapGet("/orders/{id:int}/history", (int id, JsonStore store) => {
             if (!store.Orders.Any(o => o.Id == id)) return Results.NotFound();
-            return Results.Ok(store.Progress.Where(p => p.OrderId == id).OrderBy(p => p.AdvancedAt));
+            var list = store.Progress.Where(p => p.OrderId == id).OrderBy(p => p.AdvancedAt)
+                .Select(p => new {
+                    p.Id,
+                    p.OrderId,
+                    p.StageIndex,
+                    StageName = p.StageName,
+                    AdvancedBy = p.AdvancedBy,
+                    AdvancedAt = ToBrasilia(p.AdvancedAt) ?? p.AdvancedAt
+                });
+            return Results.Ok(list);
         });
 
         api.MapDelete("/orders/completed", async (JsonStore store, IHubContext<ProductionHub> hub) =>
