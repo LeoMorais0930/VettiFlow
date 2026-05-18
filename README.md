@@ -1,66 +1,38 @@
-# VETTI Flow — Backend Protótipo
+# VETTI Flow — API
 
-## Pré-requisitos
-- .NET 8 SDK
-- PostgreSQL 15+ rodando localmente
+Backend desenvolvido em .NET 8 utilizando Minimal APIs para o ecossistema de monitoramento de produção VETTI.
 
-## Setup em 3 comandos
+## 🚀 Tecnologias
+- **.NET 8**
+- **SignalR** (Comunicação em tempo real)
+- **JSON Store** (Persistência em arquivo local para prototipagem rápida)
+- **Swagger/OpenAPI** (Documentação da API)
 
+## 🛠️ Configuração e Execução
+
+### Pré-requisitos
+- [.NET SDK 8.0+](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+### Comandos Principais
 ```bash
-# 1. Crie o banco
-psql -U postgres -c "CREATE DATABASE vettiflow;"
+# Restaurar dependências
+dotnet restore
 
-# 2. Ajuste a senha em appsettings.json
-#    "Password=SUA_SENHA_AQUI"  →  sua senha do postgres
-
-# 3. Rode
+# Executar o projeto (escutando em http://0.0.0.0:5000)
 dotnet run
 ```
 
-API disponível em: `http://localhost:5000`
-SignalR Hub em:    `http://localhost:5000/hubs/production`
+O servidor está configurado para aceitar conexões de qualquer IP na rede local, facilitando o acesso via dispositivos móveis e TVs.
 
-## Endpoints
+## 📡 Endpoints (Swagger)
+Ao rodar o projeto, a documentação interativa estará disponível em:
+`http://localhost:5000/` ou `http://<seu-ip-local>:5000/`
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET    | /api/blueprints | Lista todos os produtos |
-| POST   | /api/blueprints | Cadastra produto + etapas |
-| GET    | /api/orders | Orders abertas (para a TV) |
-| POST   | /api/orders | Lança novo pedido |
-| POST   | /api/orders/{id}/advance | **Botão PRÓXIMA ETAPA** — grava log + notifica TV via SignalR |
-| GET    | /api/orders/{id}/history | Histórico completo de avanços de um pedido |
+## 📡 SignalR Hub
+- **Caminho**: `/hubs/production`
+- **Eventos enviados**:
+    - `RefreshAll`: Notifica os clientes para recarregar todos os dados.
+    - `OrderUpdated`: Envia um objeto `OrderUpdateDto` quando um pedido é alterado.
 
-> O app Flutter deve enviar o header `X-Device-Id: <nome-do-dispositivo>` no advance  
-> para identificar quem clicou (aparecerá no log de auditoria).
-
-## Teste rápido (curl)
-
-```bash
-# Criar um pedido
-curl -X POST http://localhost:5000/api/orders \
-  -H "Content-Type: application/json" \
-  -d '{"blueprintId":1,"label":"Pedido Argentina - Lote 01","totalQty":300,"isHighPriority":true}'
-
-# Avançar etapa (simula clique do gestor)
-curl -X POST http://localhost:5000/api/orders/1/advance
-```
-
-## Evento SignalR que a TV escuta
-
-```json
-// Canal: "OrderUpdated"
-{
-  "orderId": 1,
-  "label": "Pedido Argentina - Lote 01",
-  "totalQty": 300,
-  "currentStageIndex": 1,
-  "totalStages": 4,
-  "isHighPriority": true,
-  "isCompleted": false,
-  "stageNames": ["Gravadora", "Teste 01", "Fechamento", "Expedição"]
-}
-```
-
-## Próximo passo
-Conectar o Flutter (TV Dashboard e App do Gestor) neste backend.
+---
+Desenvolvido para **VETTI — Segurança e Tecnologia**.
