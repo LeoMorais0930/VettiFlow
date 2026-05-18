@@ -12,12 +12,14 @@ public static class ApiEndpoints
     {
         var api = app.MapGroup("/api");
 
+        DateTime GetBrasiliaTime() => DateTime.UtcNow.AddHours(-3);
+
         void AppendAuditLog(string message)
         {
             try
             {
                 string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audit_log.txt");
-                File.AppendAllText(logPath, $"[{DateTime.Now:dd/MM/yyyy HH:mm:ss}] {message}{Environment.NewLine}");
+                File.AppendAllText(logPath, $"[{GetBrasiliaTime():dd/MM/yyyy HH:mm:ss}] {message}{Environment.NewLine}");
             }
             catch { }
         }
