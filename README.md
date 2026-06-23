@@ -1,9 +1,9 @@
 # VETTI Flow — API
 
-Backend desenvolvido em .NET 8 utilizando Minimal APIs para o ecossistema de monitoramento de produção VETTI.
+Backend desenvolvido em .NET utilizando Minimal APIs para o ecossistema de monitoramento de produção VETTI.
 
 ## 🚀 Tecnologias
-- **.NET 8**
+- **.NET**
 - **SignalR** (Comunicação em tempo real)
 - **JSON Store** (Persistência em arquivo local para prototipagem rápida)
 - **Swagger/OpenAPI** (Documentação da API)
@@ -11,22 +11,32 @@ Backend desenvolvido em .NET 8 utilizando Minimal APIs para o ecossistema de mon
 ## 🛠️ Configuração e Execução
 
 ### Pré-requisitos
-- [.NET SDK 8.0+](https://dotnet.microsoft.com/download/dotnet/8.0)
+- .NET SDK compatível com o `TargetFramework` do projeto
 
 ### Comandos Principais
 ```bash
 # Restaurar dependências
 dotnet restore
 
-# Executar o projeto (escutando em http://0.0.0.0:5000)
+# Executar o projeto no servidor da empresa
 dotnet run
 ```
 
-O servidor está configurado para aceitar conexões de qualquer IP na rede local, facilitando o acesso via dispositivos móveis e TVs.
+Por padrão, a API escuta em:
+
+`http://10.36.0.4:5000`
+
+Para gerar o pacote de servidor:
+
+```powershell
+.\publish-server.ps1
+```
+
+Depois, copie o ZIP gerado em `..\dist\VettiFlow.Api-server-win-x64-10.36.0.4.zip` para o servidor, extraia e execute `run-vettiflow-server.bat` como administrador.
 
 ## 📡 Endpoints (Swagger)
 Ao rodar o projeto, a documentação interativa estará disponível em:
-`http://localhost:5000/` ou `http://<seu-ip-local>:5000/`
+`http://10.36.0.4:5000/swagger`
 
 ## 📡 SignalR Hub
 - **Caminho**: `/hubs/production`
