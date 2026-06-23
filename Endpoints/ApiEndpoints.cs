@@ -75,6 +75,19 @@ public static class ApiEndpoints
             return Results.Created($"/api/blueprints/{bp.Id}", bp);
         });
 
+        api.MapPut("/blueprints/{id:int}", async (int id, BlueprintUpdateRequest req, JsonStore store, IHubContext<ProductionHub> hub) =>
+        {
+            var bp = store.Blueprints.FirstOrDefault(b => b.Id == id);
+            if (bp == null) return Results.NotFound();
+
+            bp.Name = req.Name;
+            bp.DefaultBatchSize = req.DefaultBatchSize;
+            store.Save();
+            AppendAuditLog($"PRODUTO EDITADO: {bp.Code}");
+            await NotifyClients(hub);
+            return Results.Ok(bp);
+        });
+
         api.MapDelete("/blueprints/{id:int}", async (int id, JsonStore store, IHubContext<ProductionHub> hub) =>
         {
             var bp = store.Blueprints.FirstOrDefault(b => b.Id == id);
@@ -270,5 +283,6 @@ public static class ApiEndpoints
 }
 
 public record BlueprintRequest(string Code, string Name, int DefaultBatchSize, string[] Stages);
+public record BlueprintUpdateRequest(string Name, int DefaultBatchSize);
 public record OrderRequest(int BlueprintId, string Label, int TotalQty, bool IsHighPriority, string? ComponentCodes, OrderComponentRequest[]? Components);
 public record OrderComponentRequest(int BlueprintId, int Quantity);

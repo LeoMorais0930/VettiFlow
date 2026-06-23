@@ -30,6 +30,10 @@ app.UseSwagger();
 app.UseSwaggerUI(c => c.RoutePrefix = "swagger");
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Support for Flutter Web Routing (SPA Fallback)
+app.MapFallbackToFile("/gestor/{*path:nonfile}", "gestor/index.html");
+
 app.UseCors();
 app.MapHub<ProductionHub>("/hubs/production");
 ApiEndpoints.Map(app);
