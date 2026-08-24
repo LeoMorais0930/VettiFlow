@@ -3,7 +3,6 @@ using VettiFlow.Api.Models;
 
 namespace VettiFlow.Api.Data;
 
-// Substitui o AppDbContext — persiste tudo num único arquivo JSON local
 public class JsonStore
 {
     private static readonly string FilePath =
@@ -34,7 +33,6 @@ public class JsonStore
         File.WriteAllText(FilePath, JsonSerializer.Serialize(_data, JsonOpts));
     }
 
-    // IDs auto-incrementados simples
     public int NextBlueprintId()  => (_data.Blueprints.MaxBy(x => x.Id)?.Id  ?? 0) + 1;
     public int NextOrderId()      => (_data.Orders    .MaxBy(x => x.Id)?.Id  ?? 0) + 1;
     public int NextProgressId()   => (_data.Progress  .MaxBy(x => x.Id)?.Id  ?? 0) + 1;

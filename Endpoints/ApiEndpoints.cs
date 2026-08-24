@@ -12,7 +12,6 @@ public static class ApiEndpoints
     {
         var api = app.MapGroup("/api");
 
-        // Resolve Brasilia / São_Paulo timezone (Windows / IANA fallbacks)
         TimeZoneInfo? _brasilTz = null;
         try { _brasilTz = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"); } catch { }
         if (_brasilTz == null)
@@ -45,10 +44,8 @@ public static class ApiEndpoints
             catch { }
         }
 
-        // FUNÇÃO DE BROADCAST SIMPLIFICADA
         async Task NotifyClients(IHubContext<ProductionHub> hub)
         {
-            // Enviamos um sinal simples que TODOS os apps entendem e forçam o recarregamento via HTTP
             await hub.Clients.All.SendAsync("RefreshAll");
         }
 
@@ -93,11 +90,9 @@ public static class ApiEndpoints
             var bp = store.Blueprints.FirstOrDefault(b => b.Id == id);
             if (bp == null) return Results.NotFound();
 
-            // Remove any orders that reference this blueprint
             var ordersToRemove = store.Orders.Where(o => o.BlueprintId == id).ToList();
             foreach (var o in ordersToRemove)
             {
-                // remove related progress entries
                 store.Progress.RemoveAll(p => p.OrderId == o.Id);
                 store.Orders.Remove(o);
             }
@@ -151,7 +146,6 @@ public static class ApiEndpoints
             }
             else if (!string.IsNullOrEmpty(req.ComponentCodes))
             {
-                // Legado: parsing de string
                 var codes = req.ComponentCodes.Split(';', StringSplitOptions.RemoveEmptyEntries);
                 foreach (var code in codes)
                 {
@@ -181,7 +175,6 @@ public static class ApiEndpoints
             order.TotalQty = req.TotalQty;
             order.IsHighPriority = req.IsHighPriority;
 
-            // Simples: recriamos os itens do kit se mudou (para fins de protótipo)
             if (req.Components != null)
             {
                 order.KitStatuses.Clear();
@@ -248,7 +241,7 @@ public static class ApiEndpoints
             }
 
             store.Save();
-            await NotifyClients(hub); // NOTIFICAÇÃO GLOBAL
+            await NotifyClients(hub);
             return Results.Ok();
         });
 

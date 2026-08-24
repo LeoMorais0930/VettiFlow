@@ -25,7 +25,6 @@ builder.Services.AddCors(opt =>
 
 var app = builder.Build();
 
-// Carrega os dados do arquivo JSON na subida
 app.Services.GetRequiredService<JsonStore>().Load();
 
 app.UseSwagger();
@@ -33,7 +32,6 @@ app.UseSwaggerUI(c => c.RoutePrefix = "swagger");
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Support for Flutter Web Routing (SPA Fallback)
 app.MapFallbackToFile("/gestor/{*path:nonfile}", "gestor/index.html");
 
 app.UseCors();
